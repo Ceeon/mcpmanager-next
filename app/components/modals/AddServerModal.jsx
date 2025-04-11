@@ -128,7 +128,18 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+      <Dialog 
+        as="div" 
+        className="relative z-50" 
+        onClose={(value) => {
+          // 只在显式点击背景时关闭
+          if (!document.activeElement || 
+              document.activeElement.tagName === 'BODY' || 
+              document.activeElement.classList.contains('fixed')) {
+            handleClose();
+          }
+        }}
+      >
         {/* 背景遮罩 */}
         <Transition.Child
           as={Fragment}
@@ -139,7 +150,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-foreground/5 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -153,14 +164,17 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="modal-box w-full max-w-md transform overflow-hidden rounded-lg bg-background border border-border p-6 shadow-xl transition-all">
+              <Dialog.Panel onClick={(e) => e.stopPropagation()} className="w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all">
                 {/* 模态框标题 */}
                 <div className="flex justify-between items-center mb-6">
                   <Dialog.Title as="h3" className="text-lg font-semibold">
                     {importMode ? '导入服务器配置' : '添加服务器'}
                   </Dialog.Title>
                   <button 
-                    onClick={handleClose}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClose();
+                    }}
                     className="text-muted hover:text-foreground transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -172,7 +186,10 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={toggleMode}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMode();
+                    }}
                     className="w-full"
                   >
                     {importMode ? '切换到添加单个服务器' : '切换到批量导入模式'}
@@ -180,7 +197,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                 </div>
                 
                 {/* 表单 */}
-                <div className="space-y-4">
+                <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
                   {!importMode && (
                     <>
                       {/* 服务器名称 */}
@@ -193,6 +210,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                           placeholder="输入服务器名称"
                           value={serverName}
                           onChange={(e) => setServerName(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </div>
                       
@@ -205,6 +223,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                           id="serverType"
                           value={serverType}
                           onChange={(e) => setServerType(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
                           className="select select-bordered w-full h-10 text-sm"
                         >
                           <option value="production">生产环境</option>
@@ -230,6 +249,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                         : '请输入 JSON 配置'}
                       value={jsonConfig}
                       onChange={(e) => setJsonConfig(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
                       className="w-full px-3 py-2 bg-gray-50 border border-border text-foreground rounded-md h-36 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
                     />
                   </div>
@@ -239,7 +259,10 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleValidateJson}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleValidateJson();
+                      }}
                       className="bg-gray-100 hover:bg-gray-200 text-foreground"
                     >
                       <Check className="h-4 w-4 mr-2" />
@@ -260,7 +283,10 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                   <div className="pt-2">
                     {importMode ? (
                       <Button 
-                        onClick={handleBatchImport}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBatchImport();
+                        }}
                         className="w-full"
                       >
                         <Upload className="h-4 w-4 mr-2" />
@@ -268,7 +294,10 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                       </Button>
                     ) : (
                       <Button 
-                        onClick={handleSaveServer}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveServer();
+                        }}
                         className="w-full"
                       >
                         <Save className="h-4 w-4 mr-2" />
