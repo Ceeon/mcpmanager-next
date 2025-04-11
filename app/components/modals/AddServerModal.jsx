@@ -279,18 +279,29 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                     </span>
                   </div>
                   
-                  {/* 保存按钮 */}
-                  <div className="pt-2">
+                  {/* 操作按钮 */}
+                  <div className="pt-4 flex space-x-2">
+                    <Button 
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClose();
+                      }}
+                      className="flex-1"
+                    >
+                      取消
+                    </Button>
+
                     {importMode ? (
                       <Button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBatchImport();
                         }}
-                        className="w-full"
+                        className="flex-1"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        导入服务器配置
+                        确定导入
                       </Button>
                     ) : (
                       <Button 
@@ -298,10 +309,10 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                           e.stopPropagation();
                           handleSaveServer();
                         }}
-                        className="w-full"
+                        className="flex-1"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        保存服务器
+                        确定添加
                       </Button>
                     )}
                   </div>
