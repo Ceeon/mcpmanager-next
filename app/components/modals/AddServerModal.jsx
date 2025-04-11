@@ -1,0 +1,211 @@
+'use client';
+
+import { useState } from 'react';
+import { X, Save, Check, AlertCircle } from 'lucide-react';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+
+// 添加服务器模态框组件
+export default function AddServerModal({ isOpen, onClose, onAddServer }) {
+  // 状态管理
+  const [serverName, setServerName] = useState('');
+  const [serverType, setServerType] = useState('production');
+  const [jsonConfig, setJsonConfig] = useState('');
+  const [jsonStatus, setJsonStatus] = useState({ isValid: true, message: '' });
+
+  // 重置表单
+  const resetForm = () => {
+    setServerName('');
+    setServerType('production');
+    setJsonConfig('');
+    setJsonStatus({ isValid: true, message: '' });
+  };
+
+  // 关闭模态框
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  // 验证JSON
+  const validateJSON = () => {
+    try {
+      if (!jsonConfig.trim()) {
+        return { isValid: true, message: '配置为空，将使用默认配置' };
+      }
+      
+      JSON.parse(jsonConfig);
+      return { isValid: true, message: 'JSON格式有效' };
+    } catch (e) {
+      return { isValid: false, message: `JSON格式无效: ${e.message}` };
+    }
+  };
+
+  // 验证JSON按钮点击
+  const handleValidateJson = () => {
+    const result = validateJSON();
+    setJsonStatus(result);
+  };
+
+  // 保存服务器
+  const handleSaveServer = () => {
+    // 验证名称
+    if (!serverName.trim()) {
+      alert('请输入服务器名称');
+      return;
+    }
+    
+    // 验证JSON
+    if (jsonConfig.trim()) {
+      const result = validateJSON();
+      if (!result.isValid) {
+        setJsonStatus(result);
+        return;
+      }
+    }
+    
+    // 创建服务器对象
+    const newServer = {
+      name: serverName,
+      type: serverType,
+      config: jsonConfig ? JSON.parse(jsonConfig) : {},
+    };
+    
+    // 调用回调
+    onAddServer(newServer);
+    
+    // 重置表单
+    resetForm();
+  };
+
+  return (
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        {/* 背景遮罩 */}
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-foreground/5 backdrop-blur-sm" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="modal-box w-full max-w-md transform overflow-hidden rounded-lg bg-background border border-border p-6 shadow-xl transition-all">
+                {/* 模态框标题 */}
+                <div className="flex justify-between items-center mb-6">
+                  <Dialog.Title as="h3" className="text-lg font-semibold">
+                    添加服务器
+                  </Dialog.Title>
+                  <button 
+                    onClick={handleClose}
+                    className="text-muted hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                {/* 表单 */}
+                <div className="space-y-4">
+                  {/* 服务器名称 */}
+                  <div>
+                    <label htmlFor="serverName" className="block text-xs font-medium text-muted mb-1">
+                      服务器名称
+                    </label>
+                    <Input
+                      id="serverName"
+                      placeholder="输入服务器名称"
+                      value={serverName}
+                      onChange={(e) => setServerName(e.target.value)}
+                    />
+                  </div>
+                  
+                  {/* 服务器类型 */}
+                  <div>
+                    <label htmlFor="serverType" className="block text-xs font-medium text-muted mb-1">
+                      服务器类型
+                    </label>
+                    <select
+                      id="serverType"
+                      value={serverType}
+                      onChange={(e) => setServerType(e.target.value)}
+                      className="select select-bordered w-full h-10 text-sm"
+                    >
+                      <option value="production">生产环境</option>
+                      <option value="testing">测试环境</option>
+                      <option value="development">开发环境</option>
+                      <option value="backup">备份服务器</option>
+                    </select>
+                  </div>
+                  
+                  {/* JSON配置 */}
+                  <div>
+                    <label htmlFor="jsonConfig" className="block text-xs font-medium text-muted mb-1">
+                      JSON 配置
+                    </label>
+                    <textarea
+                      id="jsonConfig"
+                      placeholder='请输入 JSON 配置'
+                      value={jsonConfig}
+                      onChange={(e) => setJsonConfig(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-50 border border-border text-foreground rounded-md h-36 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                  
+                  {/* 验证JSON */}
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleValidateJson}
+                      className="bg-gray-100 hover:bg-gray-200 text-foreground"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      验证 JSON
+                    </Button>
+                    
+                    <span className={`text-xs ${jsonStatus.isValid ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+                      {jsonStatus.isValid ? (
+                        <Check className="h-3 w-3 mr-1" />
+                      ) : (
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                      )}
+                      {jsonStatus.message}
+                    </span>
+                  </div>
+                  
+                  {/* 保存按钮 */}
+                  <div className="pt-2">
+                    <Button 
+                      onClick={handleSaveServer}
+                      className="w-full"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      保存服务器
+                    </Button>
+                  </div>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+} 
