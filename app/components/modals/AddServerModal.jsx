@@ -183,17 +183,16 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                 
                 {/* 模式切换 */}
                 <div className="mb-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleMode();
                     }}
-                    className="w-full"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     {importMode ? '切换到添加单个服务器' : '切换到批量导入模式'}
-                  </Button>
+                  </button>
                 </div>
                 
                 {/* 表单 */}
@@ -256,18 +255,17 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                   
                   {/* 验证JSON */}
                   <div className="flex items-center justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleValidateJson();
                       }}
-                      className="bg-gray-100 hover:bg-gray-200 text-foreground"
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
                     >
                       <Check className="h-4 w-4 mr-2" />
                       验证 JSON
-                    </Button>
+                    </button>
                     
                     <span className={`text-xs ${jsonStatus.isValid ? 'text-green-500' : 'text-red-500'} flex items-center`}>
                       {jsonStatus.isValid ? (
@@ -281,41 +279,41 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                   
                   {/* 操作按钮 */}
                   <div className="pt-4 flex space-x-2">
-                    <Button 
-                      variant="outline"
+                    <button 
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleClose();
                       }}
-                      className="flex-1"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                     >
                       取消
-                    </Button>
+                    </button>
 
                     {importMode ? (
-                      <Button 
-                        variant="default"
+                      <button 
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBatchImport();
                         }}
-                        className="flex-1"
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         确定导入
-                      </Button>
+                      </button>
                     ) : (
-                      <Button 
-                        variant="default"
+                      <button 
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSaveServer();
                         }}
-                        className="flex-1"
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
                       >
                         <Save className="h-4 w-4 mr-2" />
                         确定添加
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
