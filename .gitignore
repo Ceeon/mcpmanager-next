@@ -8,7 +8,7 @@
 
 # next.js
 /.next/
-# /out/
+/out/
 
 # production
 /build
@@ -34,3 +34,7 @@ next-env.d.ts
 
 # Cloudflare Pages
 .wrangler/
+
+# IDE
+.idea/
+.vscode/
