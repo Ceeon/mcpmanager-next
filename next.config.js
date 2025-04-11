@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export', // 启用静态导出模式
   images: {
     unoptimized: true, // Cloudflare Pages需要这个设置
   },
