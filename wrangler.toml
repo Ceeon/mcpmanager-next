@@ -1,4 +1,4 @@
 # wrangler.toml配置文件 - Cloudflare Pages专用
 name = "mcpmanager"
 compatibility_date = "2023-12-01"
-pages_build_output_dir = ".next" 
+pages_build_output_dir = "out" 
