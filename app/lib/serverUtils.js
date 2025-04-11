@@ -1,6 +1,6 @@
 // 解析JSON配置
 export function parseJsonConfig(jsonString) {
-  let result = { success: false, config: null, error: null };
+  let result = { success: false, config: null, error: null, allServers: null };
   
   try {
     // 尝试解析用户输入的字符串
@@ -10,6 +10,9 @@ export function parseJsonConfig(jsonString) {
     if (inputValue.includes('"mcpServers"')) {
       const fullConfig = JSON.parse(inputValue);
       if (fullConfig.mcpServers) {
+        // 保存完整的服务器列表
+        result.allServers = fullConfig.mcpServers;
+        
         // 如果是包含mcpServers的完整配置，取第一个服务器配置
         const serverName = Object.keys(fullConfig.mcpServers)[0];
         if (serverName) {
@@ -48,6 +51,51 @@ export function parseJsonConfig(jsonString) {
   }
   
   return result;
+}
+
+// 添加新函数：导入完整的MCP服务器配置
+export function importFullConfig(jsonString) {
+  try {
+    // 尝试解析用户输入的字符串
+    let inputValue = jsonString.trim();
+    let servers = [];
+    
+    // 解析 JSON
+    const parsed = JSON.parse(inputValue);
+    
+    // 检查是否包含 mcpServers 节点
+    if (parsed && parsed.mcpServers && typeof parsed.mcpServers === 'object') {
+      // 遍历所有服务器配置
+      Object.keys(parsed.mcpServers).forEach(serverName => {
+        const serverConfig = parsed.mcpServers[serverName];
+        
+        // 创建服务器对象
+        servers.push({
+          id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一ID
+          name: serverName,
+          config: serverConfig,
+          enabled: true,
+          createdAt: new Date().toISOString()
+        });
+      });
+      
+      return {
+        success: true,
+        servers: servers,
+        count: servers.length
+      };
+    }
+    
+    return {
+      success: false,
+      error: "配置中没有找到 mcpServers 节点"
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: e.message
+    };
+  }
 }
 
 // 转换配置格式

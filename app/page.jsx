@@ -9,6 +9,7 @@ import {
   getConfigPreview, 
   createFullConfig 
 } from './lib/serverUtils';
+import AddServerModal from './components/modals/AddServerModal';
 
 // 主页组件
 export default function Home() {
@@ -118,32 +119,24 @@ export default function Home() {
   };
   
   // 添加新服务器
-  const addServer = () => {
+  const addServer = (serverData) => {
+    // 使用传入的数据或使用表单数据
+    const name = serverData?.name || newServerName.trim();
+    const configObj = serverData?.config || JSON.parse(newServerConfig);
+    
     // 验证表单
-    if (!newServerName.trim()) {
+    if (!name) {
       showToastMessage('请输入服务器名称');
       return;
     }
     
-    if (!validateConfig()) {
-      return;
-    }
-    
-    // 解析和转换配置
-    const parseResult = parseJsonConfig(newServerConfig);
-    
-    if (!parseResult.success) {
-      setConfigError(parseResult.error || '无法解析配置');
-      return;
-    }
-    
     // 转换配置为当前平台格式
-    const platformConfig = convertConfig(parseResult.config, activePlatform);
+    const platformConfig = convertConfig(configObj, activePlatform);
     
     // 创建新服务器对象
     const newServer = {
       id: Date.now(),
-      name: newServerName.trim(),
+      name: name,
       config: platformConfig,
       enabled: true,
       createdAt: new Date().toISOString()
@@ -156,9 +149,38 @@ export default function Home() {
     // 保存到本地存储
     saveToLocalStorage(updatedServers);
     
+    if (!serverData) {
+      // 如果是通过表单添加的，关闭模态框并显示提示
+      closeAddModal();
+      showToastMessage('服务器添加成功');
+    }
+  };
+  
+  // 批量导入服务器配置
+  const handleBatchImport = (serversList) => {
+    if (!serversList || !serversList.length) {
+      showToastMessage('没有服务器配置可导入');
+      return;
+    }
+    
+    // 转换所有服务器配置到当前平台
+    const convertedServers = serversList.map(server => ({
+      ...server,
+      config: convertConfig(server.config, activePlatform)
+    }));
+    
+    // 合并现有和新导入的服务器
+    const updatedServers = [...servers, ...convertedServers];
+    setServers(updatedServers);
+    
+    // 保存到本地存储
+    saveToLocalStorage(updatedServers);
+    
     // 关闭模态框
     closeAddModal();
-    showToastMessage('服务器添加成功');
+    
+    // 显示提示消息
+    showToastMessage(`成功导入 ${serversList.length} 个服务器配置`);
   };
   
   // 切换服务器启用状态
@@ -557,132 +579,12 @@ export default function Home() {
       </main>
       
       {/* 添加服务器模态框 */}
-      <Transition appear show={isAddModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeAddModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center"
-                  >
-                    <span>添加新服务器</span>
-                    <button
-                      type="button"
-                      className="text-gray-400 hover:text-gray-500"
-                      onClick={closeAddModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </Dialog.Title>
-                  
-                  <div className="mt-4 space-y-4">
-                    {/* 服务器名称 */}
-                    <div>
-                      <label htmlFor="server-name" className="block text-sm font-medium text-gray-700">
-                        服务器名称
-                      </label>
-                      <input
-                        type="text"
-                        id="server-name"
-                        value={newServerName}
-                        onChange={(e) => setNewServerName(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        placeholder="输入服务器名称"
-                      />
-                    </div>
-                    
-                    {/* JSON配置 */}
-                    <div>
-                      <label htmlFor="server-config" className="flex justify-between text-sm font-medium text-gray-700">
-                        <span>JSON配置</span>
-                        <span className="text-xs text-gray-500 flex items-center">
-                          当前平台: 
-                          {activePlatform === 'windows' ? (
-                            <span className="flex items-center ml-1">
-                              <LayoutGrid className="h-3 w-3 mr-0.5" />
-                              Windows
-                            </span>
-                          ) : (
-                            <span className="flex items-center ml-1">
-                              <Command className="h-3 w-3 mr-0.5" />
-                              Mac
-                            </span>
-                          )}
-                        </span>
-                      </label>
-                      <textarea
-                        id="server-config"
-                        value={newServerConfig}
-                        onChange={(e) => setNewServerConfig(e.target.value)}
-                        rows={5}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"
-                        placeholder='{"command": "npx", "args": ["-y", "mcprouter"], "env": {"SERVER_KEY": "value"}}'
-                      />
-                      <p className="mt-1 text-xs text-gray-500">
-                        {activePlatform === 'windows' ? (
-                          <span className="flex items-center">
-                            <LayoutGrid className="h-3 w-3 mr-0.5" />
-                            在Windows平台上，命令会自动转换为CMD格式
-                          </span>
-                        ) : (
-                          <span className="flex items-center">
-                            <Command className="h-3 w-3 mr-0.5" />
-                            在Mac平台上，命令会以原始格式运行
-                          </span>
-                        )}
-                      </p>
-                      {configError && (
-                        <p className="mt-1 text-sm text-red-600">{configError}</p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={validateConfig}
-                        className="mt-1 inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        <Check className="h-3 w-3 mr-1.5" />
-                        验证JSON
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                      onClick={addServer}
-                    >
-                      <Save className="h-4 w-4 mr-1.5" />
-                      保存服务器
-                    </button>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
+      <AddServerModal 
+        isOpen={isAddModalOpen}
+        onClose={closeAddModal}
+        onAddServer={addServer}
+        onBatchImport={handleBatchImport}
+      />
       
       {/* 服务器详情模态框 */}
       <Transition appear show={isDetailModalOpen} as={Fragment}>

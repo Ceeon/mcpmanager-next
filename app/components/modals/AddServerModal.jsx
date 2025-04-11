@@ -1,19 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Save, Check, AlertCircle } from 'lucide-react';
+import { X, Save, Check, AlertCircle, Upload } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { parseJsonConfig, importFullConfig } from '../../lib/serverUtils';
 
 // 添加服务器模态框组件
-export default function AddServerModal({ isOpen, onClose, onAddServer }) {
+export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchImport }) {
   // 状态管理
   const [serverName, setServerName] = useState('');
   const [serverType, setServerType] = useState('production');
   const [jsonConfig, setJsonConfig] = useState('');
   const [jsonStatus, setJsonStatus] = useState({ isValid: true, message: '' });
+  const [importMode, setImportMode] = useState(false); // 添加导入模式状态
 
   // 重置表单
   const resetForm = () => {
@@ -21,6 +23,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer }) {
     setServerType('production');
     setJsonConfig('');
     setJsonStatus({ isValid: true, message: '' });
+    setImportMode(false);
   };
 
   // 关闭模态框
@@ -80,6 +83,49 @@ export default function AddServerModal({ isOpen, onClose, onAddServer }) {
     resetForm();
   };
 
+  // 批量导入服务器
+  const handleBatchImport = () => {
+    if (!jsonConfig.trim()) {
+      setJsonStatus({ isValid: false, message: '请输入 MCP 服务器配置' });
+      return;
+    }
+    
+    try {
+      // 使用服务器工具导入配置
+      const result = importFullConfig(jsonConfig);
+      
+      if (!result.success) {
+        setJsonStatus({ isValid: false, message: result.error });
+        return;
+      }
+      
+      // 调用批量导入回调
+      if (onBatchImport) {
+        onBatchImport(result.servers);
+        
+        // 显示成功消息
+        setJsonStatus({ 
+          isValid: true, 
+          message: `成功导入 ${result.count} 个服务器配置` 
+        });
+        
+        // 延迟关闭模态框
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+      }
+    } catch (e) {
+      setJsonStatus({ isValid: false, message: e.message });
+    }
+  };
+
+  // 切换模式
+  const toggleMode = () => {
+    setImportMode(!importMode);
+    setJsonConfig('');
+    setJsonStatus({ isValid: true, message: '' });
+  };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={handleClose}>
@@ -111,7 +157,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer }) {
                 {/* 模态框标题 */}
                 <div className="flex justify-between items-center mb-6">
                   <Dialog.Title as="h3" className="text-lg font-semibold">
-                    添加服务器
+                    {importMode ? '导入服务器配置' : '添加服务器'}
                   </Dialog.Title>
                   <button 
                     onClick={handleClose}
@@ -121,47 +167,67 @@ export default function AddServerModal({ isOpen, onClose, onAddServer }) {
                   </button>
                 </div>
                 
+                {/* 模式切换 */}
+                <div className="mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleMode}
+                    className="w-full"
+                  >
+                    {importMode ? '切换到添加单个服务器' : '切换到批量导入模式'}
+                  </Button>
+                </div>
+                
                 {/* 表单 */}
                 <div className="space-y-4">
-                  {/* 服务器名称 */}
-                  <div>
-                    <label htmlFor="serverName" className="block text-xs font-medium text-muted mb-1">
-                      服务器名称
-                    </label>
-                    <Input
-                      id="serverName"
-                      placeholder="输入服务器名称"
-                      value={serverName}
-                      onChange={(e) => setServerName(e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* 服务器类型 */}
-                  <div>
-                    <label htmlFor="serverType" className="block text-xs font-medium text-muted mb-1">
-                      服务器类型
-                    </label>
-                    <select
-                      id="serverType"
-                      value={serverType}
-                      onChange={(e) => setServerType(e.target.value)}
-                      className="select select-bordered w-full h-10 text-sm"
-                    >
-                      <option value="production">生产环境</option>
-                      <option value="testing">测试环境</option>
-                      <option value="development">开发环境</option>
-                      <option value="backup">备份服务器</option>
-                    </select>
-                  </div>
+                  {!importMode && (
+                    <>
+                      {/* 服务器名称 */}
+                      <div>
+                        <label htmlFor="serverName" className="block text-xs font-medium text-muted mb-1">
+                          服务器名称
+                        </label>
+                        <Input
+                          id="serverName"
+                          placeholder="输入服务器名称"
+                          value={serverName}
+                          onChange={(e) => setServerName(e.target.value)}
+                        />
+                      </div>
+                      
+                      {/* 服务器类型 */}
+                      <div>
+                        <label htmlFor="serverType" className="block text-xs font-medium text-muted mb-1">
+                          服务器类型
+                        </label>
+                        <select
+                          id="serverType"
+                          value={serverType}
+                          onChange={(e) => setServerType(e.target.value)}
+                          className="select select-bordered w-full h-10 text-sm"
+                        >
+                          <option value="production">生产环境</option>
+                          <option value="testing">测试环境</option>
+                          <option value="development">开发环境</option>
+                          <option value="backup">备份服务器</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
                   
                   {/* JSON配置 */}
                   <div>
                     <label htmlFor="jsonConfig" className="block text-xs font-medium text-muted mb-1">
-                      JSON 配置
+                      {importMode 
+                        ? 'MCP 服务器配置 (mcpServers格式)' 
+                        : 'JSON 配置'}
                     </label>
                     <textarea
                       id="jsonConfig"
-                      placeholder='请输入 JSON 配置'
+                      placeholder={importMode 
+                        ? '请输入完整的 MCP 服务器配置 JSON，包含 mcpServers 节点' 
+                        : '请输入 JSON 配置'}
                       value={jsonConfig}
                       onChange={(e) => setJsonConfig(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-50 border border-border text-foreground rounded-md h-36 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
@@ -192,13 +258,23 @@ export default function AddServerModal({ isOpen, onClose, onAddServer }) {
                   
                   {/* 保存按钮 */}
                   <div className="pt-2">
-                    <Button 
-                      onClick={handleSaveServer}
-                      className="w-full"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      保存服务器
-                    </Button>
+                    {importMode ? (
+                      <Button 
+                        onClick={handleBatchImport}
+                        className="w-full"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        导入服务器配置
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={handleSaveServer}
+                        className="w-full"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        保存服务器
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Dialog.Panel>
