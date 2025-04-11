@@ -12,7 +12,6 @@ import { parseJsonConfig, importFullConfig } from '../../lib/serverUtils';
 export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchImport }) {
   // 状态管理
   const [serverName, setServerName] = useState('');
-  const [serverType, setServerType] = useState('production');
   const [jsonConfig, setJsonConfig] = useState('');
   const [jsonStatus, setJsonStatus] = useState({ isValid: true, message: '' });
   const [importMode, setImportMode] = useState(false); // 添加导入模式状态
@@ -20,7 +19,6 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
   // 重置表单
   const resetForm = () => {
     setServerName('');
-    setServerType('production');
     setJsonConfig('');
     setJsonStatus({ isValid: true, message: '' });
     setImportMode(false);
@@ -72,7 +70,6 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
     // 创建服务器对象
     const newServer = {
       name: serverName,
-      type: serverType,
       config: jsonConfig ? JSON.parse(jsonConfig) : {},
     };
     
@@ -211,25 +208,6 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                           onChange={(e) => setServerName(e.target.value)}
                           onClick={(e) => e.stopPropagation()}
                         />
-                      </div>
-                      
-                      {/* 服务器类型 */}
-                      <div>
-                        <label htmlFor="serverType" className="block text-xs font-medium text-muted mb-1">
-                          服务器类型
-                        </label>
-                        <select
-                          id="serverType"
-                          value={serverType}
-                          onChange={(e) => setServerType(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="select select-bordered w-full h-10 text-sm"
-                        >
-                          <option value="production">生产环境</option>
-                          <option value="testing">测试环境</option>
-                          <option value="development">开发环境</option>
-                          <option value="backup">备份服务器</option>
-                        </select>
                       </div>
                     </>
                   )}
