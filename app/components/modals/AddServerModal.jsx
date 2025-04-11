@@ -294,6 +294,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
 
                     {importMode ? (
                       <Button 
+                        variant="default"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBatchImport();
@@ -305,6 +306,7 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
                       </Button>
                     ) : (
                       <Button 
+                        variant="default"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSaveServer();
