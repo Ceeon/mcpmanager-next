@@ -149,11 +149,8 @@ export default function Home() {
     // 保存到本地存储
     saveToLocalStorage(updatedServers);
     
-    if (!serverData) {
-      // 如果是通过表单添加的，关闭模态框并显示提示
-      closeAddModal();
-      showToastMessage('服务器添加成功');
-    }
+    // 显示提示消息
+    showToastMessage('服务器添加成功');
   };
   
   // 批量导入服务器配置
@@ -584,6 +581,7 @@ export default function Home() {
         onClose={closeAddModal}
         onAddServer={addServer}
         onBatchImport={handleBatchImport}
+        currentPlatform={activePlatform}
       />
       
       {/* 服务器详情模态框 */}

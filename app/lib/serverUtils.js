@@ -54,7 +54,7 @@ export function parseJsonConfig(jsonString) {
 }
 
 // 添加新函数：导入完整的MCP服务器配置
-export function importFullConfig(jsonString) {
+export function importFullConfig(jsonString, platform = null) {
   try {
     // 尝试解析用户输入的字符串
     let inputValue = jsonString.trim();
@@ -69,11 +69,14 @@ export function importFullConfig(jsonString) {
       Object.keys(parsed.mcpServers).forEach(serverName => {
         const serverConfig = parsed.mcpServers[serverName];
         
+        // 转换配置到指定平台格式（如果指定了平台）
+        const finalConfig = platform ? convertConfig(serverConfig, platform) : serverConfig;
+        
         // 创建服务器对象
         servers.push({
           id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一ID
           name: serverName,
-          config: serverConfig,
+          config: finalConfig,
           enabled: true,
           createdAt: new Date().toISOString()
         });

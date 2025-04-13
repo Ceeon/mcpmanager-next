@@ -9,7 +9,7 @@ import { Input } from '../ui/Input';
 import { parseJsonConfig, importFullConfig } from '../../lib/serverUtils';
 
 // 添加服务器模态框组件
-export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchImport }) {
+export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchImport, currentPlatform }) {
   // 状态管理
   const [serverName, setServerName] = useState('');
   const [jsonConfig, setJsonConfig] = useState('');
@@ -67,17 +67,25 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
       }
     }
     
+    // 解析JSON配置
+    const parseResult = parseJsonConfig(jsonConfig);
+    if (!parseResult.success) {
+      setJsonStatus({ isValid: false, message: parseResult.error || '无法解析配置' });
+      return;
+    }
+
     // 创建服务器对象
     const newServer = {
       name: serverName,
-      config: jsonConfig ? JSON.parse(jsonConfig) : {},
+      config: parseResult.config, // 使用parseJsonConfig解析后的配置
     };
     
     // 调用回调
     onAddServer(newServer);
     
-    // 重置表单
+    // 重置表单并关闭模态框
     resetForm();
+    handleClose();
   };
 
   // 批量导入服务器
@@ -88,8 +96,8 @@ export default function AddServerModal({ isOpen, onClose, onAddServer, onBatchIm
     }
     
     try {
-      // 使用服务器工具导入配置
-      const result = importFullConfig(jsonConfig);
+      // 使用服务器工具导入配置，传入当前平台
+      const result = importFullConfig(jsonConfig, currentPlatform);
       
       if (!result.success) {
         setJsonStatus({ isValid: false, message: result.error });
